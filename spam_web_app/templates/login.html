@@ -1,0 +1,18 @@
+{% extends "auth_base.html" %}
+{% block title %}Sign in · SpamShield AI{% endblock %}
+{% block auth_content %}
+<h1 class="auth-title">Welcome back</h1>
+<p class="auth-sub">Sign in to analyze email and view your history.</p>
+
+<form method="post" class="auth-form" action="{{ url_for('login', next=request.args.get('next')) }}" novalidate>
+  <label class="auth-label" for="email">Email</label>
+  <input class="auth-input" type="email" id="email" name="email" required autocomplete="email" placeholder="you@company.com">
+
+  <label class="auth-label" for="password">Password</label>
+  <input class="auth-input" type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+
+  <button type="submit" class="btn btn-primary btn-ripple btn-block auth-submit">Sign in</button>
+</form>
+
+<p class="auth-switch">No account? <a href="{{ url_for('signup') }}">Create one</a></p>
+{% endblock %}

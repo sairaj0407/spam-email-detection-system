@@ -1,0 +1,22 @@
+<div class="chat-widget" id="chat-widget" aria-live="polite">
+  <button type="button" class="chat-fab" id="chat-fab" aria-label="Open assistant" aria-controls="chat-panel"
+    aria-expanded="false" title="SpamShield Assistant">
+    <span class="chat-fab-icon" aria-hidden="true">💬</span>
+  </button>
+  <div class="chat-panel card-elevated" id="chat-panel" hidden role="dialog" aria-label="AI Assistant chat"
+    aria-hidden="true" tabindex="-1">
+    <div class="chat-panel-head">
+      <div>
+        <strong class="chat-panel-title">AI Assistant</strong>
+        <p class="chat-panel-sub">Spam, phishing, and your last scan</p>
+      </div>
+      <button type="button" class="chat-close" id="chat-close" aria-label="Close chat">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <form class="chat-form" id="chat-form">
+      <input type="text" id="chat-input" class="chat-input" placeholder="Message AI Assistant…" autocomplete="off"
+        maxlength="2000" />
+      <button type="submit" class="btn btn-primary btn-ripple chat-send">Send</button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,72 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin · Reports · SpamShield AI{% endblock %}
+{% block head_extra %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+{% endblock %}
+{% block admin_content %}
+<section class="admin-section admin-section-narrow">
+  <div class="dashboard-header">
+    <h1 class="page-title">Reports & operations</h1>
+    <p class="page-subtitle">Exports, PDF summaries, and model maintenance.</p>
+  </div>
+
+  <div class="report-grid">
+    <div class="card-elevated report-card">
+      <h2 class="section-heading">Snapshot</h2>
+      <ul class="report-stats-list">
+        <li><span>Users</span><strong>{{ stats.users }}</strong></li>
+        <li><span>Total analyses</span><strong>{{ stats.emails }}</strong></li>
+        <li><span>Spam</span><strong>{{ stats.spam }}</strong></li>
+        <li><span>Safe</span><strong>{{ stats.safe }}</strong></li>
+      </ul>
+    </div>
+    <div class="card-elevated report-card">
+      <h2 class="section-heading">Exports</h2>
+      <p class="section-hint">Download structured data for auditing.</p>
+      <div class="report-actions">
+        <a class="btn btn-secondary btn-ripple btn-block" href="{{ url_for('export_admin_users') }}">Users (CSV)</a>
+        <a class="btn btn-secondary btn-ripple btn-block" href="{{ url_for('export_admin_emails') }}">Emails (CSV)</a>
+        <button type="button" class="btn btn-primary btn-ripple btn-block" id="btn-admin-pdf">Analytics summary (PDF)</button>
+      </div>
+    </div>
+    <div class="card-elevated report-card">
+      <h2 class="section-heading">ML model</h2>
+      <p class="section-hint">Retrain from stored labels (admin only).</p>
+      <a class="btn btn-primary btn-ripple btn-block" href="{{ url_for('retrain_page') }}">Open retrain console</a>
+    </div>
+  </div>
+</section>
+
+<script type="application/json" id="admin-pdf-data">
+{"users":{{ stats.users }},"emails":{{ stats.emails }},"spam":{{ stats.spam }},"safe":{{ stats.safe }}}
+</script>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var btn = document.getElementById('btn-admin-pdf');
+  var raw = document.getElementById('admin-pdf-data');
+  if (!btn || !raw || !window.jspdf) return;
+  btn.addEventListener('click', function () {
+    try {
+      var data = JSON.parse(raw.textContent || '{}');
+      var jsPDF = window.jspdf.jsPDF;
+      var doc = new jsPDF();
+      var y = 18;
+      doc.setFontSize(16);
+      doc.text('SpamShield AI — System report', 14, y);
+      y += 12;
+      doc.setFontSize(10);
+      doc.text('Users: ' + (data.users != null ? data.users : '—'), 14, y); y += 7;
+      doc.text('Emails analyzed: ' + (data.emails != null ? data.emails : '—'), 14, y); y += 7;
+      doc.text('Spam: ' + (data.spam != null ? data.spam : '—'), 14, y); y += 7;
+      doc.text('Safe: ' + (data.safe != null ? data.safe : '—'), 14, y);
+      doc.save('spamshield-system-report.pdf');
+      if (window.showToast) window.showToast('PDF downloaded', 'success');
+    } catch (e) {
+      if (window.showToast) window.showToast('Could not build PDF', 'error');
+    }
+  });
+});
+</script>
+{% endblock %}

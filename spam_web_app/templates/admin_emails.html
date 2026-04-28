@@ -1,0 +1,120 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin · Emails · SpamShield AI{% endblock %}
+{% block admin_content %}
+<section class="admin-section">
+  <div class="dashboard-header">
+    <h1 class="page-title">Email management</h1>
+    <p class="page-subtitle">All analyzed messages with filters and delete actions.</p>
+  </div>
+
+  <form class="admin-toolbar card-elevated admin-filter-form" method="get" action="{{ url_for('admin_emails') }}">
+    <label class="filter-label" for="filter">Verdict</label>
+    <select class="history-filter" id="filter" name="filter" onchange="this.form.submit()">
+      <option value="all" {% if filter_value == 'all' %}selected{% endif %}>All</option>
+      <option value="spam" {% if filter_value == 'spam' %}selected{% endif %}>Spam</option>
+      <option value="safe" {% if filter_value == 'safe' %}selected{% endif %}>Safe</option>
+    </select>
+    <label class="filter-label" for="date_from">From</label>
+    <input class="history-filter date-input" type="date" id="date_from" name="date_from" value="{{ date_from }}">
+    <label class="filter-label" for="date_to">To</label>
+    <input class="history-filter date-input" type="date" id="date_to" name="date_to" value="{{ date_to }}">
+    <button type="submit" class="btn btn-primary btn-ripple">Apply</button>
+    <a class="btn btn-secondary btn-ripple" href="{{ url_for('export_admin_emails') }}">Export CSV</a>
+  </form>
+
+  <div class="card-elevated admin-table-card admin-table-full">
+    <div class="table-scroll">
+      <table class="history-table admin-control-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Preview</th>
+            <th>Result</th>
+            <th>Risk</th>
+            <th>Conf.</th>
+            <th>When</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in emails %}
+          <tr data-email-id="{{ e.id }}">
+            <td>{{ e.id }}</td>
+            <td>
+              <span class="preview-snippet">{{ e.user.username if e.user else ('#' ~ e.user_id) }}</span>
+              <span class="muted tiny block">#{{ e.user_id }}</span>
+            </td>
+            <td class="cell-preview"><span class="preview-snippet">{{ e.email_text[:100] }}{% if e.email_text|length > 100 %}…{% endif %}</span></td>
+            <td>{% if e.prediction == 'Spam' %}<span class="badge badge-spam">Spam</span>{% else %}<span class="badge badge-safe">Safe</span>{% endif %}</td>
+            <td class="cell-num">{{ "%.0f"|format(e.risk_score or 0) }}</td>
+            <td class="cell-num">{{ "%.0f"|format(e.confidence) }}%</td>
+            <td class="cell-time">{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td class="cell-actions">
+              <button type="button" class="btn btn-secondary btn-sm btn-ripple btn-danger-outline js-delete-email">Delete</button>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="history-empty">No records match filters.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="modal-overlay" id="email-del-modal" hidden role="dialog" aria-modal="true">
+  <div class="modal-card card-elevated">
+    <h2 class="modal-title">Delete record</h2>
+    <p class="modal-body" id="email-del-body">Remove this analyzed email from the database?</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary btn-ripple" id="email-del-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary btn-ripple" id="email-del-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var modal = document.getElementById("email-del-modal");
+  var pendingId = null;
+  function close() {
+    modal.hidden = true;
+    pendingId = null;
+    document.body.classList.remove("modal-open");
+  }
+  document.getElementById("email-del-cancel").addEventListener("click", close);
+  modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
+  document.getElementById("email-del-confirm").addEventListener("click", function () {
+    if (!pendingId) return;
+    fetch("/api/admin/emails/" + pendingId + "/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: "{}",
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          if (window.showToast) window.showToast("Record deleted", "success");
+          location.reload();
+        } else {
+          if (window.showToast) window.showToast(data.error || "Failed", "error");
+        }
+      })
+      .catch(function () {
+        if (window.showToast) window.showToast("Network error", "error");
+      });
+  });
+  document.querySelectorAll(".js-delete-email").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var tr = btn.closest("tr");
+      pendingId = tr.getAttribute("data-email-id");
+      modal.hidden = false;
+      document.body.classList.add("modal-open");
+    });
+  });
+})();
+</script>
+{% endblock %}

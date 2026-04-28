@@ -1,0 +1,9 @@
+cd "d:\Spam Email Detection System\spam_web_app" 
+python -m venv .venv 
+.\.venv\Scripts\Activate.ps1 
+pip install -r requirements.txt 
+python train_model.py 
+python app.py
+
+ pip install openai
+$env:OPENAI_API_KEY = "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"

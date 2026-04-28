@@ -1,0 +1,73 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin dashboard · SpamShield AI{% endblock %}
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+{% endblock %}
+{% block admin_content %}
+<section class="admin-section admin-section-narrow">
+  <div class="dashboard-header">
+    <h1 class="page-title">System dashboard</h1>
+    <p class="page-subtitle">Cross-tenant analytics and threat signal overview.</p>
+  </div>
+
+  <div class="stat-cards stat-cards-admin">
+    <article class="stat-card card-elevated">
+      <span class="stat-label">Total users</span>
+      <span class="stat-number" data-target="{{ stats.users }}">0</span>
+    </article>
+    <article class="stat-card card-elevated">
+      <span class="stat-label">Emails analyzed</span>
+      <span class="stat-number" data-target="{{ stats.emails }}">0</span>
+    </article>
+    <article class="stat-card card-elevated stat-card-spam">
+      <span class="stat-label">Spam (all)</span>
+      <span class="stat-number" data-target="{{ stats.spam }}">0</span>
+    </article>
+    <article class="stat-card card-elevated stat-card-safe">
+      <span class="stat-label">Safe (all)</span>
+      <span class="stat-number" data-target="{{ stats.safe }}">0</span>
+    </article>
+    <article class="stat-card card-elevated stat-card-rate">
+      <span class="stat-label">Spam share</span>
+      <span class="stat-number stat-number-pct">{{ spam_pct }}%</span>
+      <p class="stat-footnote">Of all stored analyses system-wide</p>
+    </article>
+  </div>
+
+  <div class="admin-charts">
+    <div class="chart-card card-elevated">
+      <h2 class="section-heading">Spam vs safe</h2>
+      <div class="chart-wrap">
+        <canvas id="admin-pie-chart" width="320" height="260" data-spam="{{ stats.spam }}"
+          data-safe="{{ stats.safe }}"></canvas>
+      </div>
+    </div>
+    <div class="chart-card card-elevated">
+      <h2 class="section-heading">Volume trend (14 days)</h2>
+      <div class="chart-wrap chart-wide">
+        <canvas id="admin-line-chart" width="600" height="260" data-labels='{{ trend_labels|safe }}'
+          data-spam='{{ trend_spam|safe }}' data-safe='{{ trend_safe|safe }}'></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-keywords card-elevated">
+    <h2 class="section-heading">Top spam tokens</h2>
+    <p class="section-hint">Most frequent terms in spam-labeled messages</p>
+    <div class="keyword-chips">
+      {% for word, cnt in top_keywords %}
+      <span class="keyword-chip">{{ word }}<span class="keyword-impact">{{ cnt }}</span></span>
+      {% else %}
+      <span class="muted">No spam corpus yet.</span>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof window.initAdminCharts === 'function') window.initAdminCharts();
+  });
+</script>
+{% endblock %}

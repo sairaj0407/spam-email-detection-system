@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Inbox · SpamShield AI{% endblock %}
+{% block content %}
+<section class="inbox-layout">
+  <div class="inbox-compose-column">
+    <div class="compose-card card-elevated">
+      <div class="card-header-row">
+        <h1 class="page-title">Compose</h1>
+        <p class="page-subtitle">Paste message text or upload a .txt / .eml file, preview, then analyze — no page reload.</p>
+      </div>
+
+      <form id="analyze-form" class="analyze-form" novalidate>
+        <label class="field-label" for="email_text">Email content</label>
+        <textarea
+          id="email_text"
+          name="email_text"
+          class="compose-textarea"
+          rows="12"
+          placeholder="Subject: …&#10;&#10;Body…"
+          spellcheck="true"
+        ></textarea>
+        <p class="field-hint">Supported uploads: <strong>.txt</strong>, <strong>.eml</strong>. Max 2&nbsp;MB.</p>
+
+        <input type="file" id="email_file" name="email_file" class="file-input" accept=".txt,.eml,text/plain,message/rfc822">
+
+        <div class="actions-row">
+          <button type="button" class="btn btn-secondary btn-ripple" id="btn-upload-trigger">Upload file</button>
+          <button type="button" class="btn btn-secondary btn-ripple" id="btn-preview-file">Refresh preview</button>
+          <button type="submit" class="btn btn-primary btn-ripple" id="btn-analyze">Analyze Email</button>
+        </div>
+      </form>
+
+      <div class="preview-card card-elevated" id="preview-card">
+        <h2 class="preview-heading">Preview</h2>
+        <p class="preview-meta" id="preview-meta">Type or upload to see a live preview.</p>
+        <pre class="preview-body" id="preview-body"></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="inbox-result-column">
+    <div id="result-panel" class="result-panel card-elevated is-hidden" aria-live="polite">
+      <div id="result-mount"></div>
+    </div>
+    <div id="result-placeholder" class="result-placeholder card-elevated">
+      <p class="placeholder-title">Results appear here</p>
+      <p class="placeholder-text">Run an analysis to see verdict, confidence, highlighted terms, and an explanation.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

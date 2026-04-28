@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · SpamShield AI{% endblock %}
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+{% endblock %}
+{% block content %}
+<section class="dashboard-section" id="user-dashboard-root"
+  data-total="{{ total }}"
+  data-spam="{{ spam }}"
+  data-safe="{{ ham }}">
+  <div class="dashboard-header">
+    <h1 class="page-title">Analytics</h1>
+    <p class="page-subtitle">Personal telemetry from your stored analyses.</p>
+  </div>
+
+  <div class="admin-toolbar card-elevated dashboard-exports">
+    <a class="btn btn-secondary btn-ripple" href="{{ url_for('export_history_csv') }}">Export history (CSV)</a>
+    <button type="button" class="btn btn-primary btn-ripple" id="btn-user-pdf">Export report (PDF)</button>
+  </div>
+
+  <div class="stat-cards">
+    <article class="stat-card card-elevated" data-animate="counter">
+      <span class="stat-label">Total emails checked</span>
+      <span class="stat-number" data-target="{{ total }}">0</span>
+    </article>
+    <article class="stat-card card-elevated stat-card-spam" data-animate="counter">
+      <span class="stat-label">Spam emails</span>
+      <span class="stat-number" data-target="{{ spam }}">0</span>
+    </article>
+    <article class="stat-card card-elevated stat-card-safe" data-animate="counter">
+      <span class="stat-label">Safe emails</span>
+      <span class="stat-number" data-target="{{ ham }}">0</span>
+    </article>
+  </div>
+
+  <div class="admin-charts">
+    <div class="chart-card card-elevated">
+      <div class="chart-card-head">
+        <h2 class="section-heading">Distribution</h2>
+        <p class="section-hint">Spam vs safe</p>
+      </div>
+      <div class="chart-wrap">
+        <canvas
+          id="distribution-chart"
+          width="320"
+          height="280"
+          data-spam="{{ spam }}"
+          data-ham="{{ ham }}"
+          aria-label="Pie chart of spam versus safe"></canvas>
+      </div>
+    </div>
+    <div class="chart-card card-elevated">
+      <div class="chart-card-head">
+        <h2 class="section-heading">Activity</h2>
+        <p class="section-hint">Emails analyzed per day (14 days)</p>
+      </div>
+      <div class="chart-wrap chart-wide">
+        <canvas
+          id="trend-chart"
+          width="560"
+          height="260"
+          data-labels='{{ trend_labels|safe }}'
+          data-counts='{{ trend_counts|safe }}'
+        ></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

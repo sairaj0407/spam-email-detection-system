@@ -1,0 +1,23 @@
+{% extends "auth_base.html" %}
+{% block title %}Verify sign-in · SpamShield AI{% endblock %}
+{% block auth_content %}
+<h1 class="auth-title">Two-step verification</h1>
+<p class="auth-sub">Simulated OTP flow — enter the code below (in production this would arrive by email).</p>
+
+<div class="otp-demo-banner card-elevated">
+  <strong>Demo OTP</strong>
+  <code class="otp-code">{{ demo_otp }}</code>
+</div>
+
+<form method="post" class="auth-form" action="{{ url_for('verify_2fa') }}" novalidate>
+  {% if request.args.get('next') %}
+  <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+  {% endif %}
+  <label class="auth-label" for="otp">One-time code</label>
+  <input class="auth-input" type="text" id="otp" name="otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code" placeholder="6 digits">
+
+  <button type="submit" class="btn btn-primary btn-ripple btn-block auth-submit">Verify & continue</button>
+</form>
+
+<p class="auth-switch"><a href="{{ url_for('login') }}">Use a different account</a></p>
+{% endblock %}

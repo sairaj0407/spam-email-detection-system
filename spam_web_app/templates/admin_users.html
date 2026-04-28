@@ -1,0 +1,193 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin · Users · SpamShield AI{% endblock %}
+{% block admin_content %}
+<section class="admin-section">
+  <div class="dashboard-header">
+    <h1 class="page-title">User management</h1>
+    <p class="page-subtitle">View, ban, reset passwords, or remove accounts (safeguards apply).</p>
+  </div>
+
+  <div class="admin-toolbar card-elevated">
+    <a class="btn btn-secondary btn-ripple" href="{{ url_for('export_admin_users') }}">Export CSV</a>
+  </div>
+
+  <div class="card-elevated admin-table-card admin-table-full">
+    <div class="table-scroll">
+      <table class="history-table admin-control-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr data-user-id="{{ u.id }}" data-username="{{ u.username|e }}">
+            <td>{{ u.id }}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email }}</td>
+            <td><span class="badge {% if u.is_admin %}badge-admin{% else %}badge-user{% endif %}">{{ u.role }}</span></td>
+            <td>
+              {% if u.is_banned %}
+              <span class="badge badge-banned">Banned</span>
+              {% else %}
+              <span class="badge badge-active">Active</span>
+              {% endif %}
+            </td>
+            <td class="cell-time">{{ u.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+            <td class="cell-actions">
+              <div class="action-cluster">
+                {% if u.id != current_user.id %}
+                  {% if u.is_banned %}
+                  <button type="button" class="btn btn-secondary btn-sm btn-ripple js-unban-user">Unban</button>
+                  {% else %}
+                  <button type="button" class="btn btn-secondary btn-sm btn-ripple js-ban-user">Ban</button>
+                  {% endif %}
+                  <button type="button" class="btn btn-secondary btn-sm btn-ripple js-reset-pw">Reset password</button>
+                  <button type="button" class="btn btn-secondary btn-sm btn-ripple btn-danger-outline js-delete-user">Delete</button>
+                {% else %}
+                  <span class="muted tiny">You</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="history-empty">No users.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="modal-overlay" id="admin-modal" hidden role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+  <div class="modal-card card-elevated">
+    <h2 id="admin-modal-title" class="modal-title">Confirm</h2>
+    <p class="modal-body" id="admin-modal-body"></p>
+    <div id="admin-modal-extra" class="modal-extra" hidden>
+      <label class="auth-label" for="admin-new-password">New password (min 8 chars)</label>
+      <input type="password" id="admin-new-password" class="auth-input" autocomplete="new-password" minlength="8">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary btn-ripple" id="admin-modal-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary btn-ripple" id="admin-modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var modal = document.getElementById("admin-modal");
+  var modalBody = document.getElementById("admin-modal-body");
+  var modalTitle = document.getElementById("admin-modal-title");
+  var modalExtra = document.getElementById("admin-modal-extra");
+  var modalPw = document.getElementById("admin-new-password");
+  var btnCancel = document.getElementById("admin-modal-cancel");
+  var btnConfirm = document.getElementById("admin-modal-confirm");
+  var pending = null;
+
+  function openModal(title, body, mode) {
+    modalTitle.textContent = title;
+    modalBody.textContent = body;
+    modalExtra.hidden = mode !== "password";
+    modalPw.value = "";
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+  }
+  function closeModal() {
+    modal.hidden = true;
+    pending = null;
+    document.body.classList.remove("modal-open");
+  }
+
+  btnCancel.addEventListener("click", closeModal);
+  modal.addEventListener("click", function (e) {
+    if (e.target === modal) closeModal();
+  });
+
+  function toast(msg, type) {
+    if (window.showToast) window.showToast(msg, type || "info");
+    else alert(msg);
+  }
+
+  function api(url, body) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: body ? JSON.stringify(body) : "{}",
+    }).then(function (r) {
+      return r.json().then(function (data) {
+        return { ok: r.ok, data: data };
+      });
+    });
+  }
+
+  btnConfirm.addEventListener("click", function () {
+    if (!pending) return;
+    var url = pending.url;
+    var body = {};
+    if (pending.mode === "password") {
+      var pw = (modalPw.value || "").trim();
+      if (pw.length < 8) {
+        toast("Password too short", "error");
+        return;
+      }
+      body = { password: pw };
+    }
+    api(url, body).then(function (res) {
+      if (res.ok && res.data.ok) {
+        toast(res.data.message || "Done", "success");
+        closeModal();
+        location.reload();
+      } else {
+        toast((res.data && res.data.error) || "Request failed", "error");
+      }
+    }).catch(function () {
+      toast("Network error", "error");
+    });
+  });
+
+  document.querySelectorAll(".js-ban-user").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var tr = btn.closest("tr");
+      var id = tr.getAttribute("data-user-id");
+      pending = { url: "/api/admin/users/" + id + "/ban", mode: "simple" };
+      openModal("Ban user", "Suspend this account? They will be signed out and blocked from logging in.", "simple");
+    });
+  });
+  document.querySelectorAll(".js-unban-user").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var tr = btn.closest("tr");
+      var id = tr.getAttribute("data-user-id");
+      pending = { url: "/api/admin/users/" + id + "/unban", mode: "simple" };
+      openModal("Unban user", "Restore access for this account?", "simple");
+    });
+  });
+  document.querySelectorAll(".js-delete-user").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var tr = btn.closest("tr");
+      var id = tr.getAttribute("data-user-id");
+      var name = tr.getAttribute("data-username");
+      pending = { url: "/api/admin/users/" + id + "/delete", mode: "simple" };
+      openModal("Delete user", "Permanently delete " + name + " and all their email history? This cannot be undone.", "simple");
+    });
+  });
+  document.querySelectorAll(".js-reset-pw").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var tr = btn.closest("tr");
+      var id = tr.getAttribute("data-user-id");
+      var name = tr.getAttribute("data-username");
+      pending = { url: "/api/admin/users/" + id + "/reset-password", mode: "password" };
+      openModal("Reset password", "Set a new password for " + name + ".", "password");
+    });
+  });
+})();
+</script>
+{% endblock %}

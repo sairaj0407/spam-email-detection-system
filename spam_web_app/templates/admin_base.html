@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-local-sidebar" aria-label="Admin navigation">
+    <p class="admin-local-title">Admin panel</p>
+    <nav class="admin-local-nav">
+      <a href="{{ url_for('admin_dashboard') }}"
+        class="admin-local-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+        <span class="admin-local-ico" aria-hidden="true">📊</span> Dashboard
+      </a>
+      <a href="{{ url_for('admin_users') }}"
+        class="admin-local-link {% if request.endpoint == 'admin_users' %}active{% endif %}">
+        <span class="admin-local-ico" aria-hidden="true">👥</span> Users
+      </a>
+      <a href="{{ url_for('admin_emails') }}"
+        class="admin-local-link {% if request.endpoint == 'admin_emails' %}active{% endif %}">
+        <span class="admin-local-ico" aria-hidden="true">✉️</span> Emails
+      </a>
+      <a href="{{ url_for('admin_reports') }}"
+        class="admin-local-link {% if request.endpoint == 'admin_reports' %}active{% endif %}">
+        <span class="admin-local-ico" aria-hidden="true">📑</span> Reports
+      </a>
+      <a href="{{ url_for('retrain_page') }}"
+        class="admin-local-link {% if request.endpoint == 'retrain_page' %}active{% endif %}">
+        <span class="admin-local-ico" aria-hidden="true">🤖</span> Retrain
+      </a>
+    </nav>
+
+    {% if request.endpoint == 'admin_dashboard' %}
+    <div class="activity-monitor-sidebar">
+      <h3 class="activity-monitor-title">Activity Monitor</h3>
+      <p class="activity-monitor-subtitle">Recent user actions</p>
+
+      <div class="activity-summary-sidebar">
+        <div class="summary-item-sidebar">
+          <span>Recent scans</span>
+          <strong>{{ recent_activity|length if recent_activity else 0 }}</strong>
+        </div>
+        <div class="summary-item-sidebar">
+          <span>Top active users</span>
+          <strong>{{ active_users|length if active_users else 0 }}</strong>
+        </div>
+      </div>
+
+      <div class="activity-list-sidebar">
+        {% for item in recent_activity %}
+        <div class="activity-item-sidebar">
+          <div class="activity-user-sidebar">{{ item.user }}</div>
+          <div class="activity-outcome-sidebar">
+            <span class="badge-admin">{{ item.outcome }}</span>
+          </div>
+          <div class="activity-time-sidebar">{{ item.timestamp }}</div>
+        </div>
+        {% else %}
+        <p class="activity-empty-sidebar">No recent activity</p>
+        {% endfor %}
+      </div>
+
+      <div class="active-users-sidebar">
+        <h4 class="active-users-title">Top Users</h4>
+        {% for user in active_users %}
+        <div class="active-user-sidebar">
+          <span class="active-user-name">{{ user.user }}</span>
+          <span class="active-user-stats">{{ user.emails }} emails</span>
+        </div>
+        {% else %}
+        <p class="activity-empty-sidebar">No user activity</p>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <a href="{{ url_for('index') }}" class="admin-back-link">← Back to Inbox</a>
+  </aside>
+  <div class="admin-local-main">
+    {% block admin_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

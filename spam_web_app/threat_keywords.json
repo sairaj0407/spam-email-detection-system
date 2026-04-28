@@ -1,0 +1,63 @@
+{
+  "phishing": [
+    "verify your account",
+    "confirm your identity",
+    "suspended account",
+    "unusual activity",
+    "click this link",
+    "reset your password",
+    "bank",
+    "otp",
+    "wire transfer",
+    "social security",
+    "irs refund",
+    "login to avoid",
+    "security alert",
+    "validate your email"
+  ],
+  "scam": [
+    "nigerian prince",
+    "inheritance",
+    "lottery winner",
+    "you have won",
+    "claim your prize",
+    "send money",
+    "western union",
+    "bitcoin giveaway",
+    "double your investment",
+    "guaranteed returns",
+    "act now or lose",
+    "limited time offer",
+    "cash prize",
+    "million dollars"
+  ],
+  "promotion": [
+    "unsubscribe",
+    "sale ends",
+    "percent off",
+    "free shipping",
+    "newsletter",
+    "special offer",
+    "buy now",
+    "coupon",
+    "promo code",
+    "flash sale",
+    "shop now",
+    "deal of the day",
+    "marketing",
+    "no obligation trial"
+  ],
+  "social": [
+    "linkedin",
+    "facebook",
+    "instagram",
+    "twitter",
+    "slack",
+    "mentioned you",
+    "friend request",
+    "new follower",
+    "commented on your",
+    "invited you to",
+    "team message"
+  ]
+}

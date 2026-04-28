@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}History · SpamShield AI{% endblock %}
+{% block content %}
+<section class="history-section">
+  <div class="history-header">
+    <h1 class="page-title">Email history</h1>
+    <p class="page-subtitle">Search, filter, and export your classified messages.</p>
+  </div>
+
+  <div class="history-toolbar card-elevated history-toolbar-actions">
+    <a class="btn btn-secondary btn-ripple" href="{{ url_for('export_history_csv') }}">Download CSV</a>
+  </div>
+
+  <form class="history-toolbar card-elevated" method="get" action="{{ url_for('history') }}">
+    <div class="toolbar-row toolbar-row-wrap">
+      <label class="sr-only" for="q">Search</label>
+      <input
+        class="history-search"
+        type="search"
+        id="q"
+        name="q"
+        value="{{ q }}"
+        placeholder="Search email content…"
+        autocomplete="off"
+      >
+      <label class="sr-only" for="filter">Verdict</label>
+      <select class="history-filter" id="filter" name="filter" onchange="this.form.submit()">
+        <option value="all" {% if filter_value == 'all' %}selected{% endif %}>All verdicts</option>
+        <option value="spam" {% if filter_value == 'spam' %}selected{% endif %}>Spam</option>
+        <option value="safe" {% if filter_value == 'safe' %}selected{% endif %}>Safe</option>
+      </select>
+      <label class="sr-only" for="category">Category</label>
+      <select class="history-filter" id="category" name="category" onchange="this.form.submit()">
+        <option value="all" {% if category_filter == 'all' %}selected{% endif %}>All categories</option>
+        <option value="spam" {% if category_filter == 'spam' %}selected{% endif %}>Spam</option>
+        <option value="promotions" {% if category_filter == 'promotions' %}selected{% endif %}>Promotions</option>
+        <option value="social" {% if category_filter == 'social' %}selected{% endif %}>Social</option>
+        <option value="important" {% if category_filter == 'important' %}selected{% endif %}>Important</option>
+      </select>
+      <label class="sr-only" for="threat">Threat</label>
+      <select class="history-filter" id="threat" name="threat" onchange="this.form.submit()">
+        <option value="all" {% if threat_filter == 'all' %}selected{% endif %}>All threats</option>
+        <option value="phishing" {% if threat_filter == 'phishing' %}selected{% endif %}>Phishing</option>
+        <option value="scam" {% if threat_filter == 'scam' %}selected{% endif %}>Scam</option>
+        <option value="promotion" {% if threat_filter == 'promotion' %}selected{% endif %}>Promotion</option>
+        <option value="clean" {% if threat_filter == 'clean' %}selected{% endif %}>Clean</option>
+      </select>
+      <button type="submit" class="btn btn-primary btn-ripple">Search</button>
+    </div>
+  </form>
+
+  <div class="history-table-wrap card-elevated">
+    {% if rows %}
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th scope="col">Preview</th>
+          <th scope="col">Result</th>
+          <th scope="col">Category</th>
+          <th scope="col">Threat</th>
+          <th scope="col">Risk</th>
+          <th scope="col">Confidence</th>
+          <th scope="col">When</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="cell-preview">
+            <span class="preview-snippet">{{ row.email_text[:120] }}{% if row.email_text|length > 120 %}…{% endif %}</span>
+          </td>
+          <td>
+            {% if row.prediction == 'Spam' %}
+              <span class="badge badge-spam">Spam</span>
+            {% else %}
+              <span class="badge badge-safe">Safe</span>
+            {% endif %}
+          </td>
+          <td><span class="badge badge-cat">{{ row.category or '—' }}</span></td>
+          <td><span class="badge badge-threat">{{ row.threat_type or '—' }}</span></td>
+          <td class="cell-num">{{ "%.0f"|format(row.risk_score or 0) }} <span class="risk-pill risk-{{ (row.risk_level or 'medium')|lower }}">{{ row.risk_level or '—' }}</span></td>
+          <td class="cell-num">{{ "%.1f"|format(row.confidence) }}%</td>
+          <td class="cell-time">{{ row.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="history-empty">No messages match your filters yet.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

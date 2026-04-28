@@ -1,0 +1,43 @@
+{% extends "admin_base.html" %}
+{% block title %}Retrain model · SpamShield AI{% endblock %}
+{% block admin_content %}
+<section class="retrain-section">
+  <div class="dashboard-header">
+    <h1 class="page-title">Model retraining</h1>
+    <p class="page-subtitle">Rebuild TF-IDF + logistic regression from all labeled emails in the database (falls back to synthetic corpus if needed).</p>
+  </div>
+
+  <div class="retrain-card card-elevated">
+    <p class="field-hint">This overwrites <code>model.pkl</code> and <code>vectorizer.pkl</code> on the server. Accuracy is reported when enough samples exist for a hold-out split.</p>
+    <button type="button" class="btn btn-primary btn-ripple" id="btn-retrain">Retrain model</button>
+    <pre class="retrain-output" id="retrain-output" hidden></pre>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var btn = document.getElementById('btn-retrain');
+  var out = document.getElementById('retrain-output');
+  if (!btn || !out) return;
+  btn.addEventListener('click', function () {
+    btn.disabled = true;
+    out.hidden = false;
+    out.textContent = 'Training…';
+    fetch('/api/retrain', { method: 'POST', credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        out.textContent = JSON.stringify(data, null, 2);
+        if (window.showToast) {
+          window.showToast(data.ok ? 'Retrain complete' : (data.error || 'Retrain failed'), data.ok ? 'success' : 'error');
+        }
+      })
+      .catch(function () {
+        out.textContent = 'Network error';
+        if (window.showToast) window.showToast('Network error', 'error');
+      })
+      .finally(function () { btn.disabled = false; });
+  });
+});
+</script>
+{% endblock %}
